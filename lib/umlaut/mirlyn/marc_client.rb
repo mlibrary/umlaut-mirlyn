@@ -29,6 +29,7 @@ module Umlaut
         params = PARAMS.merge(params_from(rft))
         uri = URI::HTTP.build(URI_ARGS.merge(query: params.to_query))
         @feed = Atom::Feed.load_feed(uri)
+        return if @feed.entries.length > 5
         @feed.each_entry do |entry|
           @results << get_marc(entry)
         end
