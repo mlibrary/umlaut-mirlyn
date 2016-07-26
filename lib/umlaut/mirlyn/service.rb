@@ -21,32 +21,25 @@ module Umlaut
       def check_holdings(holdings, request)
         return if holdings.empty?
         holdings.each do |holding|
-          #@record_attributes[holding.id][:holdings] = holding
+
           collection_str = holding.location_str.dup
           collection_str << " - " + holding.collection_str unless holding.collection_str.empty?
 
           call_number = holding.call_no
           call_number = holding.source if call_number.nil? || call_number.empty?
+
           request.add_service_response(
             service: self,
             key: holding.id.dup,
             call_number: call_number,
-            value_string: 'value string',
-            #url: holding.info_link,
             url: holding.url,
             notes: holding.notes,
-            content: 'content',
-            #value_string: holding.location_str.dup,
-            #value_alt_string: holding.call_no.dup,
-            #value_text: holding.status_str.dup,
             status: holding.status_str,
-            display_text: "Display Text",
             service_type_value: 'holding',
             collection_str: holding.collection_str,
             request_url: holding.request_url,
-            #call_number: holding.call_no,
+
           )
-          pp holding
         end
       end
 
