@@ -8,7 +8,8 @@ module Umlaut
 
       attr_accessor :results
 
-      def initialize
+      def initialize(floor_locations)
+        @floor_locations = floor_locations
         @results = []
       end
 
@@ -17,6 +18,7 @@ module Umlaut
           uri = URI::HTTP.build(URI_ARGS.merge(query: "id=#{key}"))
           result = JSON.parse(Net::HTTP.get(uri))
           return unless result
+          #pp result
           result.each_pair do |id, list|
             list.each do |item|
               item['item_info'].each do |info|

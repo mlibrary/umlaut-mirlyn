@@ -19,6 +19,21 @@ module Umlaut
       end
 
       def check_holdings(holdings, request)
+
+        request.add_service_response(
+          service: self,
+          display_text: 'Search in Mirlyn',
+          url: @client.holding_search_url,
+          service_type_value: 'holding_search',
+        )
+
+        request.add_service_response(
+          service: self,
+          display_text: 'Document Delivery',
+          url: @client.document_delivery_url,
+          service_type_value: 'document_delivery',
+        )
+return
         return if holdings.empty?
         holdings.each do |holding|
 
@@ -27,6 +42,7 @@ module Umlaut
 
           call_number = holding.call_no
           call_number = holding.source if call_number.nil? || call_number.empty?
+
 
           request.add_service_response(
             service: self,
@@ -38,7 +54,6 @@ module Umlaut
             service_type_value: 'holding',
             collection_str: holding.collection_str,
             request_url: holding.request_url,
-
           )
         end
       end
@@ -49,7 +64,7 @@ module Umlaut
       end
 
       def init_holdings_client
-        Umlaut::Mirlyn::HoldingsClient.new
+        Umlaut::Mirlyn::HoldingsClient.new(@floor_locations)
       end
 
       def service_types_generated
