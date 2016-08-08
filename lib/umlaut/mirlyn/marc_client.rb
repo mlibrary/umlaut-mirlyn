@@ -137,7 +137,7 @@ module Umlaut
           params[:lookfor] << rft.issn
         end
 
-        author = rft.metadata['au'] || "#{rft.metadata['aulast']}, #{rft.metadata['aufirst']}".trim
+        author = rft.metadata['au'] || "#{rft.metadata['aulast']}, #{rft.metadata['aufirst']}".strip
         unless author.nil? || author.empty? || author == ','
           params[:type] << AUTHOR
           params[:lookfor] << author
