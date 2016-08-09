@@ -6,26 +6,6 @@ module Umlaut
     class MarcClient
       attr_accessor :results, :feed
 
-
-      PROBLEM_URI_ARGS = {
-        host: 'umich.qualtrics.com',
-        path: '/SE/'
-      }
-      DOCDEL_URI_ARGS = {
-        host: 'www.lib.umich.edu',
-        path: '/help/sfx/docsys/openurl.php'
-      }
-
-      HTML_URI_ARGS = {
-        host: 'mirlyn.lib.umich.edu',
-        path: '/Search/Home'
-      }
-
-      FEED_URI_ARGS = {
-        host: 'mirlyn.lib.umich.edu',
-        path: '/Search/SearchExport'
-      }
-
       PARAMS = {
         page: 0,
         method: 'atom'
@@ -39,7 +19,11 @@ module Umlaut
       AUTHOR = 'author'
       PUBLISHER = 'publisher'
 
-      def initialize
+      def initialize(help, holding_feed, holding_search, document_delivery)
+        @help = help
+        @holding_feed = holding_feed
+        @holding_search = holding_search
+        @document_delivery = document_delivery
         @results = []
         @feed = nil
         @rft = nil
@@ -50,16 +34,15 @@ module Umlaut
       end
 
       def problem_url
-        query = {
-          SID: 'SV_2broDMHlZrBYwJL',
+        query = @help[:query].merge(
           LinkModel: 'unknown',
           DocumentID: 'http://mgetit.lib.umich.edu/?' + @rft.to_context_object.to_hash.to_query
-        }
-        URI::HTTP.build(PROBLEM_URI_ARGS.merge(query: query.to_query)).to_s
+        )
+        URI::HTTP.build(@help.merge(query: query.to_query)).to_s
       end
 
       def document_delivery_url
-        URI::HTTP.build(DOCDEL_URI_ARGS.merge(query: version_01_params.to_query)).to_s
+        URI::HTTP.build(@document_delivery.merge(query: version_01_params.to_query)).to_s
       end
 
       def version_01_params
@@ -75,14 +58,14 @@ module Umlaut
 
       def holding_search_url
         params = PARAMS.merge(params_from(@rft))
-        URI::HTTP.build(HTML_URI_ARGS.merge(query: params.to_query)).to_s
+        URI::HTTP.build(@holding_search.merge(query: params.to_query)).to_s
       end
 
 
       def search_by_referent(rft)
         @rft ||= rft
         params = PARAMS.merge(params_from(rft))
-        uri = URI::HTTP.build(FEED_URI_ARGS.merge(query: params.to_query))
+        uri = URI::HTTP.build(@holding_feed.merge(query: params.to_query))
         begin
           @feed = Atom::Feed.load_feed(uri)
           @feed.each_entry do |entry|

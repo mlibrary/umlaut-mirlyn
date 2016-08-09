@@ -24,7 +24,12 @@ module Umlaut
       end
 
       def init_bib_client
-        @client ||= Umlaut::Mirlyn::MarcClient.new
+        @client ||= Umlaut::Mirlyn::MarcClient.new(
+          @help['base'].symbolize_keys,
+          @holding_feed['base'].symbolize_keys,
+          @holding_search['base'].symbolize_keys,
+          @document_delivery['base'].symbolize_keys
+        )
       end
 
       def add_link_to_opac(client, request)
@@ -42,21 +47,21 @@ module Umlaut
 
         request.add_service_response(
           service: self,
-          display_text: "Problems accessing link",
+          display_text: @help['label'],
           url: @client.problem_url,
           service_type_value: 'help'
         )
 
         request.add_service_response(
           service: self,
-          display_text: 'Search in Mirlyn',
+          display_text: @holding_search['label'],
           url: @client.holding_search_url,
           service_type_value: 'holding_search',
         )
 
         request.add_service_response(
           service: self,
-          display_text: 'Document Delivery',
+          display_text: @document_delivery['label'],
           url: @client.document_delivery_url,
           service_type_value: 'document_delivery',
         )
