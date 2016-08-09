@@ -6,6 +6,11 @@ module Umlaut
     class MarcClient
       attr_accessor :results, :feed
 
+
+      PROBLEM_URI_ARGS = {
+        host: 'umich.qualtrics.com',
+        path: '/SE/'
+      }
       DOCDEL_URI_ARGS = {
         host: 'www.lib.umich.edu',
         path: '/help/sfx/docsys/openurl.php'
@@ -42,6 +47,15 @@ module Umlaut
 
       def accuracy
         3
+      end
+
+      def problem_url
+        query = {
+          SID: 'SV_2broDMHlZrBYwJL',
+          LinkModel: 'unknown',
+          DocumentID: 'http://mgetit.lib.umich.edu/?' + @rft.to_context_object.to_hash.to_query
+        }
+        URI::HTTP.build(PROBLEM_URI_ARGS.merge(query: query.to_query)).to_s
       end
 
       def document_delivery_url

@@ -3,6 +3,26 @@ module Umlaut
     class Service < ::Opac
       attr_accessor :client
 
+      # Have to override the default here.
+      def parse_for_fulltext_links(marc, request)
+        eight_fifty_sixes = []
+        marc.find_all { | f| '856' === f.tag}.each do | link |
+          eight_fifty_sixes << link
+        end
+        eight_fifty_sixes.each do | link |
+          next if link.indicator2.match(/[28]/)
+          next unless link['u']
+          next if link['u'].match(/(sfx\.galib\.uga\.edu)|(findit\.library\.gatech\.edu)/)
+          label = (link['z']||'Electronic Access')
+          request.add_service_response(
+            :service=>self,
+            :key=>label,
+            :value_string=>link['u'],
+            :service_type_value => 'fulltext'
+            )
+        end
+      end
+
       def init_bib_client
         @client ||= Umlaut::Mirlyn::MarcClient.new
       end
@@ -19,6 +39,13 @@ module Umlaut
       end
 
       def check_holdings(holdings, request)
+
+        request.add_service_response(
+          service: self,
+          display_text: "Problems accessing link",
+          url: @client.problem_url,
+          service_type_value: 'help'
+        )
 
         request.add_service_response(
           service: self,
