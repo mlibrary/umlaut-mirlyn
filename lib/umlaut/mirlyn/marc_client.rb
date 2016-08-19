@@ -30,7 +30,7 @@ module Umlaut
       end
 
       def accuracy
-        3
+        0
       end
 
       def problem_url
