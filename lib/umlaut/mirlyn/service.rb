@@ -3,6 +3,20 @@ module Umlaut
     class Service < ::Opac
       attr_accessor :client
 
+      def initialize(config)
+        super
+        @preempted_by = [
+          { 'existing_type' => :disambiguation }
+        ]
+      end
+
+      def handle(request)
+        add_help_link(request)
+        add_document_delivery_link(request)
+        add_holding_search_link(request)
+        #super(request)
+      end
+
       # Have to override the default here.
       def parse_for_fulltext_links(marc, request)
         eight_fifty_sixes = []
@@ -23,10 +37,71 @@ module Umlaut
         end
       end
 
+      def add_holding_search_link(request)
+        request.add_service_response(
+          service: self,
+          display_text: @holding_search['label'],
+          url: holding_search_url(request),
+          service_type_value: 'holding_search'
+        )
+      end
+
+      def holding_search_url(request)
+        rft = request.referent
+        params = MarcClient::PARAMS.merge(MarcClient.params_from(rft))
+        base = @holding_search['base'].symbolize_keys
+        URI::HTTP.build(base.merge(query: params.to_query)).to_s
+      end
+
+      def add_help_link(request)
+        request.add_service_response(
+          service: self,
+          display_text: @help['label'],
+          url: problem_url(request),
+          service_type_value: 'help'
+        )
+      end
+
+      def problem_url(request)
+        rft = request.referent
+        base = @help['base'].symbolize_keys
+        query = base[:query].merge(
+          LinkModel: 'unknown',
+          DocumentID: 'http://mgetit.lib.umich.edu/?' + rft.to_context_object.to_hash.to_query
+        )
+        URI::HTTP.build(base.merge(query: query.to_query)).to_s
+      end
+
+      def add_document_delivery_link(request)
+        request.add_service_response(
+          service: self,
+          display_text: @document_delivery['label'],
+          url: document_delivery_url(request),
+          service_type_value: 'document_delivery',
+        )
+      end
+
+      def document_delivery_url(request)
+        base = @document_delivery['base'].symbolize_keys
+        rft = request.referent
+        URI::HTTP.build(base.merge(query: version_01_params(rft).to_query)).to_s
+      end
+
+      def version_01_params(rft)
+        params = {}
+        params[:aufirst] = rft.metadata['au']
+        params[:title]   = rft.title
+        params[:year]    = rft.year
+        params[:issn]    = rft.issn
+        params[:isbn]    = rft.isbn
+        params[:genre]   = rft.metadata['genre']
+        params
+      end
+
       def init_bib_client
         @client ||= Umlaut::Mirlyn::MarcClient.new(
-          @help['base'].symbolize_keys,
           @holding_feed['base'].symbolize_keys,
+          @help['base'].symbolize_keys,
           @holding_search['base'].symbolize_keys,
           @document_delivery['base'].symbolize_keys
         )
@@ -45,12 +120,7 @@ module Umlaut
 
       def check_holdings(holdings, request)
 
-        request.add_service_response(
-          service: self,
-          display_text: @help['label'],
-          url: @client.problem_url,
-          service_type_value: 'help'
-        )
+
 
         request.add_service_response(
           service: self,
@@ -59,13 +129,8 @@ module Umlaut
           service_type_value: 'holding_search',
         )
 
-        request.add_service_response(
-          service: self,
-          display_text: @document_delivery['label'],
-          url: @client.document_delivery_url,
-          service_type_value: 'document_delivery',
-        )
-return
+
+        return
         return if holdings.empty?
         holdings.each do |holding|
 
