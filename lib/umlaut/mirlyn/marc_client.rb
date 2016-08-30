@@ -53,6 +53,7 @@ module Umlaut
         params = {
           type: [],
           lookfor: [],
+          bool: ['AND'],
         }
 
         # genres: journal, book, conference, article,
