@@ -15,7 +15,7 @@ module Umlaut
       ISSN  = 'isn'
       ISBN  = 'isn'
       YEAR  = 'year'
-      TITLE = 'title_starts_with'
+      TITLE = 'title'
       AUTHOR = 'author'
       PUBLISHER = 'publisher'
 
@@ -63,12 +63,17 @@ module Umlaut
 
         if rft.metadata['genre'] == 'book'
           params[:'fqor-format'] = ['Book']
+
+          unless rft.year.nil?
+            params[:'fqor-publishDateTrie'] = [rft.year]
+          end
+
           if !rft.metadata['btitle'].nil?
             params[:type] << TITLE
-            params[:lookfor] << rft.metadata['btitle']
+            params[:lookfor] << prepare_title(rft.metadata['btitle'])
           elsif !rft.title.nil?
             params[:type] << TITLE
-            params[:lookfor] << rft.title
+            params[:lookfor] << prepare_title(rft.title)
           end
           author = rft.metadata['au'] || "#{rft.metadata['aulast']}, #{rft.metadata['aufirst']}".strip
           unless author.nil? || author.empty? || author == ','
@@ -79,20 +84,16 @@ module Umlaut
           params[:'fqor-format'] = ['Journal', 'Newspaper', 'Serial']
           if !rft.metadata['jtitle'].nil?
             params[:type] << TITLE
-            params[:lookfor] << rft.metadata['jtitle']
+            params[:lookfor] << prepare_title(rft.metadata['jtitle'])
           elsif !rft.title.nil?
             params[:type] << TITLE
-            params[:lookfor] << rft.title
+            params[:lookfor] << prepare_title(rft.title)
           end
         else
           unless rft.title.nil?
             params[:type] << TITLE
-            params[:lookfor] << rft.title
+            params[:lookfor] << prepare_title(rft.title)
           end
-        end
-
-        unless rft.year.nil?
-          params[:'fqor-publishDateTrie'] = [rft.year]
         end
 
         unless rft.isbn.nil?
@@ -100,15 +101,20 @@ module Umlaut
           params[:lookfor] << rft.isbn
         end
 
-        unless rft.issn.nil?
-          params[:type] <<  ISSN
-          params[:lookfor] << rft.issn
-        end
+        # The Mirlyn UI seems to be missing these.
+        #unless rft.issn.nil?
+        #  params[:type] <<  ISSN
+        #  params[:lookfor] << rft.issn
+        #end
 
         params
       end
 
       private
+      def self.prepare_title(title)
+        '"' + title.gsub(/"/, '') + '"'
+      end
+
       def get_marc(entry)
         Net::HTTP.get(URI(entry.id + '.xml'))
       end
