@@ -4,7 +4,22 @@ module Umlaut
       attr_accessor :client
 
       def initialize(config)
+
+        @holding_search = {
+          'base' => {},
+          'label' => 'Holdings Search'
+        }
+        @help = {
+          'base' => {},
+          'label' => 'Help'
+        }
+        @document_delivery = {
+          'base' => {},
+          'label' => 'Document Delivery'
+        }
+
         super
+
         @preempted_by = [
           { 'existing_type' => :disambiguation }
         ]
@@ -29,11 +44,11 @@ module Umlaut
           next if link['u'].match(/(sfx\.galib\.uga\.edu)|(findit\.library\.gatech\.edu)/)
           label = (link['z']||'Electronic Access')
           request.add_service_response(
-            :service=>self,
-            :key=>label,
-            :value_string=>link['u'],
-            :service_type_value => 'fulltext'
-            )
+            service: self,
+            key: label,
+            value_string: link['u'],
+            service_type_value: 'fulltext'
+          )
         end
       end
 
