@@ -10,7 +10,7 @@ module Umlaut
           'label' => 'Holdings Search'
         }
         @help = {
-          'base' => {},
+          'base' => {query: {}},
           'label' => 'Help'
         }
         @document_delivery = {
@@ -103,13 +103,14 @@ module Umlaut
       end
 
       def version_01_params(rft)
-        params = {}
-        params[:aufirst] = rft.metadata['au']
-        params[:title]   = rft.title
-        params[:year]    = rft.year
-        params[:issn]    = rft.issn
-        params[:isbn]    = rft.isbn
-        params[:genre]   = rft.metadata['genre']
+        params = rft.metadata.dup
+        if params['title'].nil?
+          params['title'] = params['jtitle'] || params['btitle']
+        end
+
+        if params['aufirst'].nil?
+          params['aufirst'] = params['au']
+        end
         params
       end
 
