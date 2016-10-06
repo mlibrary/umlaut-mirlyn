@@ -29,7 +29,7 @@ module Umlaut
         add_help_link(request)
         add_document_delivery_link(request)
         add_holding_search_link(request)
-        #super(request)
+        request.dispatched(self, true)
       end
 
       # Have to override the default here.
