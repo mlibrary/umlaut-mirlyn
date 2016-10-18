@@ -81,8 +81,8 @@ module Umlaut
         rft = request.referent
         base = @help['base'].symbolize_keys
         query = base[:query].merge(
-          LinkModel: 'unknown',
-          DocumentID: 'http://mgetit.lib.umich.edu/?' + rft.to_context_object.to_hash.to_query
+          "LinkModel" => 'unknown',
+          "DocumentID" => 'http://mgetit.lib.umich.edu/?' + rft.to_context_object.to_hash.to_query
         )
         URI::HTTP.build(base.merge(query: query.to_query)).to_s
       end
