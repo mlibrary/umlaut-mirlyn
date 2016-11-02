@@ -82,7 +82,7 @@ module Umlaut
         base = @help['base'].symbolize_keys
         query = base[:query].merge(
           "LinkModel" => 'unknown',
-          "DocumentID" => 'http://mgetit.lib.umich.edu/?' + rft.to_context_object.to_hash.to_query
+          "DocumentID" => 'https://' + request.http_env['HTTP_HOST'] + request.http_env['REQUEST_URI']
         )
         URI::HTTP.build(base.merge(query: query.to_query)).to_s
       end
