@@ -78,11 +78,12 @@ module Umlaut
       end
 
       def problem_url(request)
-        rft = request.referent
         base = @help['base'].symbolize_keys
+        http_env = request.http_env
+        hostname = http_env['HTTP_X_FORWARDED_HOST'] || http_env['HTTP_HOST']
         query = base[:query].merge(
           "LinkModel" => 'unknown',
-          "DocumentID" => 'https://' + request.http_env['HTTP_HOST'] + request.http_env['REQUEST_URI']
+          "DocumentID" => 'https://' + hostname + http_env['REQUEST_URI']
         )
         URI::HTTP.build(base.merge(query: query.to_query)).to_s
       end
