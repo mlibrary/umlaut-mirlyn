@@ -65,7 +65,7 @@ module Umlaut
         rft = request.referent
         params = MarcClient::PARAMS.merge(MarcClient.params_from(rft))
         base = @holding_search['base'].symbolize_keys
-        URI::HTTP.build(base.merge(query: params.to_query)).to_s
+        URI::HTTPS.build(base.merge(query: params.to_query)).to_s
       end
 
       def add_help_link(request)
@@ -100,7 +100,49 @@ module Umlaut
       def document_delivery_url(request)
         base = @document_delivery['base'].symbolize_keys
         rft = request.referent
-        URI::HTTP.build(base.merge(query: version_01_params(rft).to_query)).to_s
+        URI::HTTPS.build(base.merge(query: illiad_params(rft).to_query)).to_s
+      end
+
+      def illiad_params(rft)
+        illiad_article_params(rft)
+      end
+
+      def illiad_article_params(rft)
+        metadata = rft.metadata
+
+        pmid = nil
+        rft.identifiers.each do |id|
+          pmid = id.slice(10, id.length) if id.start_with?('info:pmid/')
+        end
+
+        params = {}
+        params['Form'] = 22
+        params['Action'] = 10
+        params['PhotoArticleTitle'] = metadata['atitle'] || metadata['title']
+        params['ISSN'] = metadata['issn'] || metadata['eissn']
+        params['ISBN'] = metadata['isbn'] || metadata['eisbn']
+        params['PhotoJournalIssue'] = metadata['issue']
+        params['PhotoJournalTitle'] = metadata['jtitle'] || metadata['btitle']
+        params['PhotoJournalVolume'] = metadata['volume']
+        params['ESPNumber'] = rft.oclcnum
+        params['PMID'] = pmid
+
+        if metadata['date'] &&  (metadata['date'].length == 7 || metadata['date'].length == 10)
+          params['PhotoJournalYear'] = metadata['date'].slice(0, 4)
+          params['PhotoJournalMonth'] = metadata['date'].slice(5, 2)
+        end
+
+        params['PhotoArticleAuthor'] = metadata['au'] ||
+          (metadata['aulast'] && metadata['aufirst'] &&  "#{metadata['aulast']}, #{metadata['aufirst']}") ||
+          metadata['aulast'] ||
+          metadata['aufirst']
+
+        params['PhotoJournalInclusivePages'] = metadata['pages'] ||
+          (metadata['spage'] && metadata['epage'] && "#{metadata['spage']}-#{metadata['epage']}") ||
+          metadata['spage'] ||
+          metadata['epage']
+
+        params
       end
 
       def version_01_params(rft)
