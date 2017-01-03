@@ -25,8 +25,18 @@ module Umlaut
         ]
       end
 
+      def request_has_error?(request)
+        error = false
+        Request.connection_pool.with_connection do
+          request.service_responses.to_a.find do |response|
+            error = error || response.service_type_value_name == 'site_message' && response.service_data[:type] == 'warning'
+          end
+        end
+        error
+      end
+
       def handle(request)
-        add_help_link(request)
+        add_help_link(request) unless request_has_error?(request)
         add_document_delivery_link(request)
         add_holding_search_link(request)
         request.dispatched(self, true)
