@@ -114,10 +114,6 @@ module Umlaut
       end
 
       def illiad_params(rft)
-        illiad_article_params(rft)
-      end
-
-      def illiad_article_params(rft)
         metadata = rft.metadata
 
         pmid = nil
@@ -126,15 +122,15 @@ module Umlaut
         end
 
         params = {}
-        params['Form'] = 22
         params['Action'] = 10
-        params['PhotoArticleTitle'] = metadata['atitle'] || metadata['title']
-        params['ISSN'] = metadata['issn'] || metadata['eissn']
-        params['ISBN'] = metadata['isbn'] || metadata['eisbn']
-        params['PhotoJournalIssue'] = metadata['issue']
-        params['PhotoJournalTitle'] = metadata['jtitle'] || metadata['btitle']
-        params['PhotoJournalVolume'] = metadata['volume']
         params['ESPNumber'] = rft.oclcnum
+        params['PhotoJournalVolume'] = metadata['volume']
+        params['ISSN'] = metadata['issn'] || metadata['eissn'] || metadata['isbn'] || metadata['eisbn']
+        params['PhotoJournalIssue'] = metadata['issue']
+        params['LoanTitle'] =
+          params['PhotoJournalTitle'] =
+          metadata['jtitle'] || metadata['btitle']
+
         params['PMID'] = pmid
 
         if metadata['date'] &&  (metadata['date'].length == 7 || metadata['date'].length == 10)
@@ -142,17 +138,68 @@ module Umlaut
           params['PhotoJournalMonth'] = metadata['date'].slice(5, 2)
         end
 
-        params['PhotoArticleAuthor'] = metadata['au'] ||
-          (metadata['aulast'] && metadata['aufirst'] &&  "#{metadata['aulast']}, #{metadata['aufirst']}") ||
-          metadata['aulast'] ||
-          metadata['aufirst']
-
         params['PhotoJournalInclusivePages'] = metadata['pages'] ||
           (metadata['spage'] && metadata['epage'] && "#{metadata['spage']}-#{metadata['epage']}") ||
           metadata['spage'] ||
           metadata['epage']
 
+        params['PhotoArticleTitle'] = get_illiad_article_title(metadata)
+        params['PhotoArticleAuthor'] = get_illiad_article_author(metadata)
+        params['LoanAuthor'] =
+          params['PhotoItemAuthor'] =
+          get_illiad_item_author(metadata)
+        params['Form'] = get_illiad_form(metadata)
+
         params
+      end
+
+      def get_illiad_article_title(metadata)
+        title = metadata['atitle'] || metadata['title']
+        if title.present? && title == (metadata['btitle'] || metadata['jtitle'])
+          nil
+        else
+          title
+        end
+      end
+
+      def get_illiad_article_author(metadata)
+        case metadata['genre']
+        when 'book', 'journal',
+          nil
+        else
+          get_author(metadata)
+        end
+      end
+
+      def get_illiad_item_author(metadata)
+        case metadata['genre']
+        when 'book', 'journal'
+          get_author(metadata)
+        else
+          nil
+        end
+      end
+
+      def get_author(metadata)
+        metadata['au'] ||
+          (metadata['aulast'] && metadata['aufirst'] &&  "#{metadata['aulast']}, #{metadata['aufirst']}") ||
+          metadata['aulast'] ||
+          metadata['aufirst']
+      end
+
+      def get_illiad_form(metadata)
+        case metadata['genre']
+        when 'dissertation'
+          27
+        when 'article'
+          22
+        when 'bookitem'
+          23
+        when 'book', 'journal'
+          21
+        else
+          21
+        end
       end
 
       def version_01_params(rft)
