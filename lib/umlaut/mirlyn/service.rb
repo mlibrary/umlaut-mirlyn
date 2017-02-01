@@ -198,7 +198,7 @@ module Umlaut
         when 'book', 'journal'
           21
         else
-          21
+          22
         end
       end
 
