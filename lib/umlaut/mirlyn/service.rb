@@ -73,9 +73,8 @@ module Umlaut
 
       def holding_search_url(request)
         rft = request.referent
-        params = MarcClient::PARAMS.merge(MarcClient.params_from(rft))
         base = @holding_search['base'].symbolize_keys
-        URI::HTTPS.build(base.merge(query: params.to_query)).to_s
+        LibrarySearch.new(base, rft).to_s
       end
 
       def add_help_link(request)
