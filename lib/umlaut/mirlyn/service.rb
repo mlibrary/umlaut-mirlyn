@@ -116,8 +116,10 @@ module Umlaut
         metadata = rft.metadata
 
         pmid = nil
+        doi  = nil
         rft.identifiers.each do |id|
           pmid = id.slice(10, id.length) if id.start_with?('info:pmid/')
+          doi  = id.slice(9, id.length) if id.start_with?('info:doi/')
         end
 
         params = {}
@@ -128,9 +130,10 @@ module Umlaut
         params['PhotoJournalIssue'] = metadata['issue']
         params['LoanTitle'] =
           params['PhotoJournalTitle'] =
-          metadata['jtitle'] || metadata['btitle']
+          metadata['jtitle'] || metadata['btitle'] || metadata['title']
 
         params['PMID'] = pmid
+        params['DOI'] = doi
 
         if metadata['date'] &&  (metadata['date'].length == 7 || metadata['date'].length == 10)
           params['PhotoJournalYear'] = metadata['date'].slice(0, 4)
@@ -153,8 +156,8 @@ module Umlaut
       end
 
       def get_illiad_article_title(metadata)
-        title = metadata['atitle'] || metadata['title']
-        if title.present? && title == (metadata['btitle'] || metadata['jtitle'])
+        title = metadata['atitle']
+        if title.present? && title == (metadata['btitle'] || metadata['jtitle'] || metadata['title'])
           nil
         else
           title
